@@ -1,5 +1,5 @@
 ---
-title: "Mtcars_xgboost"
+title: "01_practice_xgboost.Rmd"
 output: github_document
 ---
 # Overview
@@ -12,7 +12,99 @@ library(ranger)
 library(xgboost)
 ```
 
+# Load Data
+```{r}
+bikes_july <- read_csv("../Data/BikesJuly.csv")
+bikes_aug <- read_csv("../Data/BikesAugust.csv")
+```
+
+# Explore the Data
+How do rentals change by date?
+
+### Visualization
+Create a scatter plot of the date with y equal to bike rentals, and x equal to date. Color according to weather, and shape according to type of day.
+```{r}
+bikes_july %>% 
+  ggplot(aes(
+    x = X1,
+    y = cnt
+  )) +
+  geom_point(aes(
+    color = weathersit,
+    shape = holiday)) +
+  geom_line(alpha = 0.25)
+```
+
+### Structure
+```{r}
+str(bikes_july)
+```
 
 
+# Build a Random Forest with Ranger
+The goal of this classifier is to predict the number of bikes rented in an hour, given that we know weather, type of day, and time of day.
+
+Set the seed for reproducible (but random) results.
+```{r}
+set.seed(42)
+```
+
+The ranger() function builds a random forest model, and it takes formula, data, num.trees, respect.unordered.factors, and seed as inputs. We need to make the formula ourselves.
+
+Define the output column (dependent variable of model).
+```{r}
+# If this dependent (outcome) variable is a numeric value, ranger automatically runs a regression. Otherwise, it runs classification.
+dependent <- "cnt"
+```
+
+Specify the variables of the random forest (independent variables).
+```{r}
+independent <- c("hr", "holiday", "workingday", "weathersit", "temp", "atemp", "hum", "windspeed")
+```
+
+Create the formula.
+```{r}
+(fmla <- paste(dependent, "~", paste(independent, collapse = " + ")))
+```
+
+### Fit and print the random forest model.
+```{r}
+(bike_model_rf <- ranger(formula = fmla,
+                        data = bikes_july,
+                        num.trees = 500, # This should be greater than 200, 500 is default
+                        respect.unordered.factors = "order", 
+                        seed = 42
+                        ))
+# Note: respect.unordered.factorsTells ranger how to treat categorical variables. This safely and meaningfully encodes categorical variables as numbers. It also runs faster than converting categoricals to indicator variables
+
+# What is printed? At the bottom, we get the Out of Bag Mean Squared Error as well as the Out of Bag R Squared value. These are estimates on how it will run on future data.
+```
+
+### Make predictions 
+With the new model, add predictions to the bikes_aug dataset.
+```{r}
+# The predict() function takes a model and a new dataset. 
+(bikes_aug$pred <- predict(bike_model_rf, bikes_aug)$predictions)
+```
+
+### Summarize the model's fit to bikes_aug
+```{r}
+bikes_aug %>% 
+  mutate(residual = cnt - pred)  %>%        # calculate the residual
+  summarize(rmse  = sqrt(mean(residual^2))) # calculate rmse
+```
+
+
+### Visualize how well the model fits
+```{r}
+bikes_aug %>% 
+  ggplot(aes(x = cnt,
+             y = pred)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_smooth(se = FALSE)
+  
+```
+There seems to be a systematic error in our model as we try to predict larger values of rentals, but predictions below 500 seem more or less reasonable. Overall, it is not a very good model. 
 
 
