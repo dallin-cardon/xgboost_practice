@@ -6,7 +6,7 @@ This repo includes a log of myself as I try to understand xgboost. Under data, w
 The mtcars_xgboost.Rmd is a document I will be working on primarily. 
 
 # References
-Bikes Dataset: https://www.kaggle.com/saurabh0108/bikes-dataset \n
-XGBoost Rdocumentation: https://www.rdocumentation.org/packages/xgboost/versions/0.4-4 \n
-Datacamp Tutorial: https://campus.datacamp.com/courses/supervised-learning-in-r-regression/tree-based-methods?ex=4 \n
-XGBoost Tutorial by XGboost Developers: https://xgboost.readthedocs.io/en/latest/build.html \n
+* Bikes Dataset: https://www.kaggle.com/saurabh0108/bikes-dataset
+* XGBoost Rdocumentation: https://www.rdocumentation.org/packages/xgboost/versions/0.4-4
+* Datacamp Tutorial: https://campus.datacamp.com/courses/supervised-learning-in-r-regression/tree-based-methods?ex=4
+* XGBoost Tutorial by XGboost Developers: https://xgboost.readthedocs.io/en/latest/build.html
