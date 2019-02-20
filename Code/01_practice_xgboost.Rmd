@@ -3,7 +3,7 @@ title: "Mtcars_xgboost"
 output: github_document
 ---
 # Overview
-In this document, I will try to understand how xgboost works for classification. To better understand how to use this tool, I will use the mtcars dataset, and try to build a classifier that can tell me what type of car something is, given other data about it. I understand that mtcars is a very small dataset, but I don't intend for this to be a practical model. 
+In this document, I will try to understand how xgboost works for classification. To better understand how to use this tool, I will use the bikesJuly dataset, and try to build a classifier from that dataset.
 
 # Load Packages
 ```{r}
@@ -12,8 +12,7 @@ library(ranger)
 library(xgboost)
 ```
 
-Z# Research
-To understand xgboosting from the ground up, I'll follow the xgboost tutorial available at https://xgboost.readthedocs.io/en/latest/build.html
+
 
 
 
