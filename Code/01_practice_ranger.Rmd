@@ -1,5 +1,5 @@
 ---
-title: "01_practice_xgboost.Rmd"
+title: "01_practice_ranger.Rmd"
 output: github_document
 ---
 # Overview
@@ -9,7 +9,6 @@ In this document, I will try to understand how xgboost works for classification.
 ```{r}
 library(tidyverse)
 library(ranger)
-library(xgboost)
 ```
 
 # Load Data

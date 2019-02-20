@@ -1,0 +1,58 @@
+---
+title: "02_practice_xgboost"
+output: github_document
+---
+# Load Packages
+```{r}
+library(tidyverse)
+library(vtreat)
+```
+
+# Load Data
+```{r}
+bikes_july <- read_csv("../Data/BikesJuly.csv")
+bikes_aug <- read_csv("../Data/BikesAugust.csv")
+```
+
+
+# Intro to One-Hot Encoding
+R packages usually handle categorical variables well; however, xgboost does not. To work with xgboost, we need to know how to convert categorical variables (strings) into indicator variables, or one-hot encoded vectors. We will use the vtreat package to one-hot encode categorical variables. 
+
+One-hot encoded vectors are a numerical representation for a categorical variable. The vector length represents the number of total variable values, and each index of the vector represents a True/False value for that variable. In the vector, only one number will take the value of true (1) and the rest will take the value of false (0). This is why they are called one-hot encoded--only one value is "hot" or true in the vector. 
+
+Example: 
+Lets say we have three categorical variables, red, green, and blue. We could represent red as [1, 0, 0], green as [0, 1, 0], and blue as [0, 0, 1].
+
+# The vtreat package
+We use the vtreat package to help one-hot encode our categorical variables. There are two main functions we will use
+* designTreatmentsZ()
+  * Records the steps necessary to one-hot encode this data and future data inputs.
+  * This function feeds into prepare
+* prepare()
+  * converts data into xgboost-compatible data (all numerical, no missing values)
+
+# Using the designtreatmentsZ() function
+```{r}
+# Identify the output column (dependent variable/response variable)
+response <- "cnt"
+
+# Identify the input columns (independent variables/explanatory variables)
+explanatory <- c("hr", "holiday", "workingday", "weathersit", "temp", "atemp", "hum", "windspeed")
+
+# Create the treatment plan, using designtreatmentsZ(). This treatment plan will be fed into prepare.
+treatplan <- designTreatmentsZ(dframe = bikes_july, 
+                               varlist = explanatory, 
+                               verbose = FALSE) # Will not print progress
+```
+
+# Look at the clean and lev Variables
+The designTreatmentsZ() creates a list. One of the elements of the list is scoreFrame, which contains a list of new variable names, and the old variable names. The code column lists which 
+```{r}
+(newvars <- treatplan %>%
+  use_series(scoreFrame) %>%               
+  filter(code %in% c("clean", "lev")) %>%  # get the variables you care about
+  use_series(varName))                     # get the varName column
+```
+
+
+
