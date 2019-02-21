@@ -10,8 +10,11 @@ library(vtreat)
 
 # Load Data
 ```{r}
-bikes_july <- read_csv("../Data/BikesJuly.csv")
-bikes_aug <- read_csv("../Data/BikesAugust.csv")
+bikes_july <- read_csv("../Data/BikesJuly.csv")%>% 
+  mutate(hr_new = as.factor(hr)) # Later in the analysis, it will be important to keep hr as a factor as opposed to a double.
+
+bikes_aug <- read_csv("../Data/BikesAugust.csv") %>% 
+  mutate(hr_new = as.factor(hr)) # Later in the analysis, it will be important to keep hr as a factor as opposed to a double.
 ```
 
 
@@ -37,7 +40,7 @@ We use the vtreat package to help one-hot encode our categorical variables. Ther
 response <- "cnt"
 
 # Identify the input columns (independent variables/explanatory variables)
-explanatory <- c("hr", "holiday", "workingday", "weathersit", "temp", "atemp", "hum", "windspeed")
+explanatory <- c("hr_new", "holiday", "workingday", "weathersit", "temp", "atemp", "hum", "windspeed")
 
 # Create the treatment plan, using designtreatmentsZ(). This treatment plan will be fed into prepare.
 treatplan <- designTreatmentsZ(dframe = bikes_july, 
@@ -45,14 +48,55 @@ treatplan <- designTreatmentsZ(dframe = bikes_july,
                                verbose = FALSE) # Will not print progress
 ```
 
-# Look at the clean and lev Variables
-The designTreatmentsZ() creates a list. One of the elements of the list is scoreFrame, which contains a list of new variable names, and the old variable names. The code column lists which 
+# Find and store at the clean and lev Variables
+The designTreatmentsZ() creates a list. One of the elements of the list is scoreFrame, which contains a list of new variable names, and the old variable names. In this example, we had the weathersit variable which had three levels (partly cloudy, light precipitation, and misty). Each of these weathersit levels got a new variable name (listed in varName column of the scoreframe). origName is the old variable name. 
+
+The code column lists what types of variables each variable is. Some are clean (meaning they are numeric or binary, and they have been cleaned for NaNs and NAs (? I think this is correct?)). Others are catP's meaning they are categorical variables that need to be split into levels. lev indicates levels of a categorical variable that need to be included in the one-hot encoding vector associated with their categorical variable (origName).
+
+We are interested in these clean and lev variables for one-hot encoding (I don't know how to articulate why, other than that we don't need the weathersit variable because we have all of its levles).
 ```{r}
-(newvars <- treatplan %>%
-  use_series(scoreFrame) %>%               
-  filter(code %in% c("clean", "lev")) %>%  # get the variables you care about
-  use_series(varName))                     # get the varName column
+# Look at the scoreframe
+treatplan$scoreFrame
+
+# Store the new variable names
+(onehot_vars <- treatplan$scoreFrame %>%               
+  filter(code %in% c("clean", "lev")) %>%  # get the variables you care about (clean and lev)
+  select(varName))                     # get the varName column
 ```
 
+# Prepare the Training Data
+```{r}
+bikes_july_treat <- prepare(treatmentplan = treatplan,
+                            dframe = bikes_july)
+
+# ,varRestriction = onehot_vars was an argument included in the datacamp tutorial, but it breaks the prepare function, so I excluded it. I guess we didn't need to get the clean/lev variables?
+```
+
+# Prepare the Test Data
+```{r}
+bikes_aug_treat <- prepare(treatmentplan = treatplan,
+                            dframe = bikes_aug)
+
+# ,varRestriction = onehot_vars was an argument included in the datacamp tutorial, but it breaks the prepare function, so I excluded it. I guess we didn't need to get the clean/lev variables?
+```
+
+# Using XGBoost()
+
+# Conceptual Intro to Cross Validation
+Cross validation is a method where we partision our dataset into k sections, and run an algorithm on a random sample of those sections, and then test the algorithm against the unseen data. We do this multiple times, and average our algorithm's output. This method helps us use an entire set of data for both testing and training the dataset, without overfitting the model.
+
+In the context of using XGBoost, cross validation specifically helps prevent overfitting the model.
+```{r}
+cross_validation <- xgb.cv(data = as.matrix(bikes_july_treat),
+                           label = bikes_july$cnt,
+                           nrounds = 100,
+                           nfold = 5,
+                           objective = "reg:linear",
+                           eta = 0.3,
+                           max_depth = 6,
+                           early_stopping_rounds = 10,
+                           verbose = 0   # will not give ongoing updates as function is running
+                           )
+```
 
 

@@ -10,3 +10,11 @@ The mtcars_xgboost.Rmd is a document I will be working on primarily.
 * XGBoost Rdocumentation: https://www.rdocumentation.org/packages/xgboost/versions/0.4-4
 * Datacamp Tutorial: https://campus.datacamp.com/courses/supervised-learning-in-r-regression/tree-based-methods?ex=4
 * XGBoost Tutorial by XGboost Developers: https://xgboost.readthedocs.io/en/latest/build.html
+* Cross Validation: https://www.youtube.com/watch?v=TIgfjmp-4BA
+* Decision Trees: https://www.youtube.com/watch?v=7VeUPuFGJHk
+* Random Forests: https://www.youtube.com/watch?v=J4Wdy0Wc_xQ
+* More Random Forests: https://www.youtube.com/watch?v=nyxTdL_4Q-Q
+* Really Intense MIT lecture on Boosting: https://www.youtube.com/watch?v=UHBmv7qCey4
+* Boostrap Aggregating (Bagging): https://www.youtube.com/watch?v=2Mg8QD0F1dQ
+
+
