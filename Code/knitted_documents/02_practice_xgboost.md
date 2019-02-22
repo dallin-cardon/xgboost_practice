@@ -1,6 +1,15 @@
 02\_practice\_xgboost
 ================
 
+Overview
+========
+
+In this code, I will be exploring the xgboost package as well as the vtreat package. XGBoost can help us create a model for classification as well as regression. The vtreat package can help us prepare our data in a format compatible with XGBoost (one-hot encoded).
+
+For practice, I will be createing an xgboost model that predicts how many bike rentals occur in an hour, given the time of day, weather, and other factors. I will be using the bikesJuly dataset for training and the bikesAugust dataset for testing (both datasets are found on Kaggle, and are referenced in the ReadMe). I will be closely following a datacamp tutorial to help me better understand the xgboost and vtreat package (also referenced on the ReadMe).
+
+This model will be similar to the Ranger model I made in 01\_practice\_ranger.RMD, but it should perform better.
+
 Load Packages
 =============
 
@@ -96,7 +105,7 @@ The vtreat package
 
 We use the vtreat package to help one-hot encode our categorical variables. There are two main functions we will use \* designTreatmentsZ() \* Records the steps necessary to one-hot encode this data and future data inputs. \* This function feeds into prepare \* prepare() \* converts data into xgboost-compatible data (all numerical, no missing values)
 
-Using the designtreatmentsZ() function
+Using the designtreatmentsZ() Function
 ======================================
 
 ``` r
@@ -112,8 +121,8 @@ treatplan <- designTreatmentsZ(dframe = bikes_july,
                                verbose = FALSE) # Will not print progress
 ```
 
-Find and store at the clean and lev Variables
-=============================================
+Find and Store the clean and lev Variables
+==========================================
 
 The designTreatmentsZ() creates a list. One of the elements of the list is scoreFrame, which contains a list of new variable names, and the old variable names. In this example, we had the weathersit variable which had three levels (partly cloudy, light precipitation, and misty). Each of these weathersit levels got a new variable name (listed in varName column of the scoreframe). origName is the old variable name.
 
@@ -332,7 +341,7 @@ bikes_aug$pred <- predict(object = bike_model,
                           newdata = as.matrix(bikes_aug_treat))
 ```
 
-Look at results
+Look at Results
 ===============
 
 ``` r
