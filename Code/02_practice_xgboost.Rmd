@@ -6,6 +6,7 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(vtreat)
+library(xgboost)
 ```
 
 # Load Data
@@ -86,17 +87,72 @@ bikes_aug_treat <- prepare(treatmentplan = treatplan,
 Cross validation is a method where we partision our dataset into k sections, and run an algorithm on a random sample of those sections, and then test the algorithm against the unseen data. We do this multiple times, and average our algorithm's output. This method helps us use an entire set of data for both testing and training the dataset, without overfitting the model.
 
 In the context of using XGBoost, cross validation specifically helps prevent overfitting the model.
+
+Running the cross-validation using xgb.cv() will create a list. One of the elements of this list is evaluation_log. The evaluation log can tell us which iteration had the smallest RMSE mean, indicating how many trees we should use in our model. 
 ```{r}
+set.seed(600) # Cross validation uses some randomization, so we'll set the seed to get reproducible results.
+
 cross_validation <- xgb.cv(data = as.matrix(bikes_july_treat),
-                           label = bikes_july$cnt,
-                           nrounds = 100,
-                           nfold = 5,
-                           objective = "reg:linear",
-                           eta = 0.3,
-                           max_depth = 6,
+                           label = bikes_july$cnt, # outcome/response variable/dependent variable
+                           nrounds = 100, # Maximum number of trees to fit
+                           nfold = 5, # Number of folds for cross-validation
+                           objective = "reg:linear", # For regression
+                           eta = 0.3, # Learning Rate
+                           max_depth = 6, # Maximum depth of individual trees
                            early_stopping_rounds = 10,
                            verbose = 0   # will not give ongoing updates as function is running
                            )
+
+# Find the reccomended number of trees (the min test_rmse_mean value)
+eval_log <- as.data.frame(cross_validation$evaluation_log) # Snag the evaluation log
+(nrounds <- which.min(eval_log$test_rmse_mean)) # Find the test with the minimum test RMSE mean. This gives the number of trees you should have.
+```
+### Visualize RMSE and Number of trees
+```{r}
+eval_log %>% 
+  ggplot(aes(x = iter, y = test_rmse_mean)) +
+  geom_line()
 ```
 
+# Train the Model
+```{r}
+# Notice that the arguments are similar to the xgb.cv() arguments in the block of code above. 
+bike_model <- xgboost(data = as.matrix(bikes_july_treat), 
+                 label = bikes_july$cnt,
+                 nrounds = nrounds,
+                 objective = "reg:linear",
+                 eta = 0.3,
+                 depth = 6,
+                 verbose = 0)
+```
+
+# Predict Values Using Our Model
+
+We will try to predict the August bike rentals
+
+### Clean Dataset
+First, we need to clean our test dataset. Luckily, we already did this earlier and saved it as the object bikes_aug_treat.
+
+### Predict on the Dataset
+```{r}
+bikes_aug$pred <- predict(object = bike_model, 
+                          newdata = as.matrix(bikes_aug_treat))
+```
+
+# Look at results
+```{r}
+(bikes_aug)
+```
+
+# Visually Examine Results
+```{r}
+bikes_aug %>% 
+  ggplot(aes(x = cnt,
+             y = pred)) + 
+  geom_point() + 
+  geom_abline()
+```
+
+# Analysis
+Relative to our Ranger model, we see that this data fits much better. I would say that, similar to the Ranger model in 01_practice_ranger.Rmd, we still see a systematic error as we try to predict larger bike rentals. 
 
