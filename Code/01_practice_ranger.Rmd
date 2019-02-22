@@ -3,7 +3,7 @@ title: "01_practice_ranger.Rmd"
 output: github_document
 ---
 # Overview
-In this document, I will try to understand how xgboost works for classification. To better understand how to use this tool, I will use the bikesJuly dataset, and try to build a classifier from that dataset.
+In this document, I will try to understand how xgboost works for classification. To better understand how to use this tool, I will use the bikesJuly dataset (found on Kaggle, referenced in the ReadMe), and try to build a model that predicts how many bikes will be rented in an hour, given that we know weather, time of day, and a few other things. 
 
 # Load Packages
 ```{r}
@@ -66,7 +66,7 @@ Create the formula.
 (fmla <- paste(dependent, "~", paste(independent, collapse = " + ")))
 ```
 
-### Fit and print the random forest model.
+### Fit and Print the Random Forest Model.
 ```{r}
 (bike_model_rf <- ranger(formula = fmla,
                         data = bikes_july,
@@ -74,27 +74,31 @@ Create the formula.
                         respect.unordered.factors = "order", 
                         seed = 42
                         ))
-# Note: respect.unordered.factorsTells ranger how to treat categorical variables. This safely and meaningfully encodes categorical variables as numbers. It also runs faster than converting categoricals to indicator variables
-
-# What is printed? At the bottom, we get the Out of Bag Mean Squared Error as well as the Out of Bag R Squared value. These are estimates on how it will run on future data.
 ```
+Note: respect.unordered.factorsTells ranger how to treat categorical variables. This safely and meaningfully encodes categorical variables as numbers. It also runs faster than converting categoricals to indicator variables
 
-### Make predictions 
+What is printed? At the bottom, we get the Out of Bag Mean Squared Error as well as the Out of Bag R Squared value. These are estimates on how it will run on future data.
+
+
+### Make Predictions 
 With the new model, add predictions to the bikes_aug dataset.
 ```{r}
 # The predict() function takes a model and a new dataset. 
-(bikes_aug$pred <- predict(bike_model_rf, bikes_aug)$predictions)
+bikes_aug$pred <- predict(bike_model_rf, bikes_aug)$predictions
+
+(bikes_aug %>% 
+  select(cnt, pred))
 ```
 
-### Summarize the model's fit to bikes_aug
+### Summarize the Model's Fit to bikes_aug
 ```{r}
-bikes_aug %>% 
+(bikes_aug %>% 
   mutate(residual = cnt - pred)  %>%        # calculate the residual
-  summarize(rmse  = sqrt(mean(residual^2))) # calculate rmse
+  summarize(rmse  = sqrt(mean(residual^2)))) # calculate rmse
 ```
 
 
-### Visualize how well the model fits
+### Visualize How Well the Model Fits
 ```{r}
 bikes_aug %>% 
   ggplot(aes(x = cnt,
@@ -104,6 +108,12 @@ bikes_aug %>%
   geom_smooth(se = FALSE)
   
 ```
-There seems to be a systematic error in our model as we try to predict larger values of rentals, but predictions below 500 seem more or less reasonable. Overall, it is not a very good model. 
+
+# Analysis of Ranger Model
+With actual values of known bike rentals on the x-axis, and predicted values on the y axis, we can visualize how well the model fits the test data. If it were an absolute perfect model, predictions would equal known values, and the points would perfectly fit on they y = x line (the black line I have printed for reference). 
+
+To help visualize the deviance this model has from the test data, I have plotted a geom_smooth() line (the blue line), which follows the general path of the data. We see that the model seems to over-predict when bike rentals are under 300, and under-predict when bike rentals are above 300.
+
+There seems to be a systematic error in our model as we try to predict larger values of rentals, but predictions below 500 seem more or less reasonable. Overall, it is not a very good model, and it has likely overfit our data. 
 
 
